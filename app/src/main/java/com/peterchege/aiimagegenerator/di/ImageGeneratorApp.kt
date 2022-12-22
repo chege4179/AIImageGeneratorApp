@@ -1,4 +1,8 @@
 package com.peterchege.aiimagegenerator.di
 
-class ImageGeneratorApp {
-}
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
+
+
+@HiltAndroidApp
+class ImageGeneratorApp : Application()

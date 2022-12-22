@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "AI Image Generator"
-include ':app'
+include (":app")

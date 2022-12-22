@@ -1,4 +1,8 @@
 package com.peterchege.aiimagegenerator.models
 
-class RequestBody {
-}
+data class RequestBody (
+    val prompt:String,
+    val n:Int,
+    val size:String,
+
+        )
