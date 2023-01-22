@@ -16,7 +16,9 @@
 package com.peterchege.aiimagegenerator.ui.screens
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +43,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.peterchege.aiimagegenerator.downloader.AndroidDownloader
 import com.peterchege.aiimagegenerator.ui.components.MyCustomDropDownMenu
 import com.peterchege.aiimagegenerator.ui.components.PagerIndicator
 import com.peterchege.aiimagegenerator.ui.viewModels.HomeScreenViewModel
@@ -47,6 +51,7 @@ import com.peterchege.aiimagegenerator.util.imageCounts
 import com.peterchege.aiimagegenerator.util.imageSizes
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.M)
 @OptIn(ExperimentalPagerApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -54,6 +59,7 @@ fun HomeScreen(
     navController:NavController,
     viewModel:HomeScreenViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
@@ -185,7 +191,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(300.dp),
-                                contentDescription = "Product Images"
+                                contentDescription = "Generated Images"
                             )
                             Box(
                                 modifier = Modifier
@@ -222,11 +228,31 @@ fun HomeScreen(
                             }
                         }
                     }
+
                     Text(
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                         text = "NB: The images might load slowly because of the API so please be patient enough for them to load ")
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(90.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ){
+                        Button(
+                            onClick = {
+                                val downloader = AndroidDownloader(context = context)
+
+                                viewModel.generatedImages.value.map {
+                                    downloader.downloadFile(url = it.url)
+                                }
+
+                            }
+                        ){
+                            Text(text = "Download Images")
+                        }
+                    }
+
 
                 }
             }
