@@ -8,7 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 
 class AndroidDownloader(
-    private val context: Context
+    context: Context
 ): Downloader {
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -17,12 +17,18 @@ class AndroidDownloader(
     @RequiresApi(Build.VERSION_CODES.M)
     override fun downloadFile(url: String): Long {
         val request = DownloadManager.Request(url.toUri())
-            .setMimeType("image/jpg")
+            .setMimeType("image/png")
             .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setTitle("image.jpg")
-            .addRequestHeader("Authorization", "Bearer <token>")
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "image.jpg")
+            .setTitle("${getRandomString(10)}.png")
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "image.png")
+
         return downloadManager.enqueue(request)
+    }
+    fun getRandomString(length: Int) : String {
+        val charset = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz0123456789"
+        return (1..length)
+            .map { charset.random() }
+            .joinToString("")
     }
 }
