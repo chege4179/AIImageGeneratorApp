@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.di
+package com.peterchege.aiimagegenerator.data.di
 
-import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.room.Room
 import com.peterchege.aiimagegenerator.BuildConfig
-import com.peterchege.aiimagegenerator.api.OpenAIApi
+import com.peterchege.aiimagegenerator.data.api.OpenAIApi
+import com.peterchege.aiimagegenerator.data.repository.ImageRepositoryImpl
+import com.peterchege.aiimagegenerator.domain.repository.ImageRepository
 import com.peterchege.aiimagegenerator.util.Constants
 import dagger.Module
 import dagger.Provides
@@ -40,13 +38,19 @@ object AppModule {
         .build()
     @Provides
     @Singleton
-    fun provideOpenAIApi():OpenAIApi{
+    fun provideOpenAIApi(): OpenAIApi {
         return Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(Constants.BASE_URL)
             .client(client)
             .build()
             .create(OpenAIApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideImageRepository(api:OpenAIApi): ImageRepository {
+        return ImageRepositoryImpl(api = api)
     }
 
 }

@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.di
-
-import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+package com.peterchege.aiimagegenerator.data.api
 
 
-@HiltAndroidApp
-class ImageGeneratorApp : Application()
+import com.peterchege.aiimagegenerator.BuildConfig
+import com.peterchege.aiimagegenerator.domain.models.ImageResponse
+import com.peterchege.aiimagegenerator.domain.models.RequestBody
+import com.peterchege.aiimagegenerator.util.Constants
+import retrofit2.http.*
+
+interface OpenAIApi {
+
+    @POST("generations")
+    suspend fun generateImages(@Body requestBody: RequestBody): ImageResponse
+
+}

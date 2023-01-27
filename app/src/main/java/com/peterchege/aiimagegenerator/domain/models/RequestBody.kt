@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.models
+package com.peterchege.aiimagegenerator.domain.models
 
 data class RequestBody (
     val prompt:String,

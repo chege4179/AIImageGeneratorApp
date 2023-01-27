@@ -20,12 +20,9 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -43,7 +40,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
-import com.peterchege.aiimagegenerator.downloader.AndroidDownloader
+import com.peterchege.aiimagegenerator.domain.downloader.AndroidDownloader
 import com.peterchege.aiimagegenerator.ui.components.MyCustomDropDownMenu
 import com.peterchege.aiimagegenerator.ui.components.PagerIndicator
 import com.peterchege.aiimagegenerator.ui.viewModels.HomeScreenViewModel

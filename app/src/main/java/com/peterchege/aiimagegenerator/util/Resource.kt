@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 AI Image Generator App Peter Chege Mwangi
+ * Copyright 2023 PInstagram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.models
+package com.peterchege.aiimagegenerator.util
 
-data class ImageResponse (
-    val created:String,
-    val data:List<ImageItem>
-        )
-
-data class ImageItem(
-    val url:String
-)
+sealed class Resource<T>(
+    val data: T? = null,
+    val message: String? = null
+) {
+    class Success<T>(data: T) : Resource<T>(data)
+    class Error<T>(message: String, data: T? = null) : Resource<T>(data, message)
+    class Loading<T> : Resource<T>()
+}

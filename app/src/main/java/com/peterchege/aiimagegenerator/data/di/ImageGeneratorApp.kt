@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.util
+package com.peterchege.aiimagegenerator.data.di
+
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
 
-
-
-val imageSizes = listOf("1024x1024","512x512","256x256")
-val imageCounts = listOf(1,2,3,4,5,6,7,8,9,10)
+@HiltAndroidApp
+class ImageGeneratorApp : Application()

@@ -1,4 +1,4 @@
-package com.peterchege.aiimagegenerator.downloader
+package com.peterchege.aiimagegenerator.domain.downloader
 
 interface Downloader {
     fun downloadFile(url: String): Long

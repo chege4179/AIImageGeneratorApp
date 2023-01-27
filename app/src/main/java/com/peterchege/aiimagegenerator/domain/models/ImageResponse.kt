@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.api
+package com.peterchege.aiimagegenerator.domain.models
 
+data class ImageResponse (
+    val created:String,
+    val data:List<ImageItem>
+        )
 
-import com.peterchege.aiimagegenerator.BuildConfig
-import com.peterchege.aiimagegenerator.models.ImageResponse
-import com.peterchege.aiimagegenerator.models.RequestBody
-import com.peterchege.aiimagegenerator.util.Constants
-import retrofit2.http.*
-
-interface OpenAIApi {
-
-    @POST("generations")
-    suspend fun generateImages(@Body requestBody:RequestBody):ImageResponse
-
-}
+data class ImageItem(
+    val url:String
+)

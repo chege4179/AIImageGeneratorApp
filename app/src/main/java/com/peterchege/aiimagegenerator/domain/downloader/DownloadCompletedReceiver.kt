@@ -1,4 +1,4 @@
-package com.peterchege.aiimagegenerator.downloader
+package com.peterchege.aiimagegenerator.domain.downloader
 
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
