@@ -6,8 +6,11 @@ plugins {
     id ("org.jetbrains.kotlin.android")
     id ("kotlin-kapt")
     id ("dagger.hilt.android.plugin")
+    id("com.hiya.jacoco-android")
 }
-
+jacoco {
+    toolVersion = "0.8.8"
+}
 val key: String = gradleLocalProperties(rootDir).getProperty("OPEN_AI_API_KEY")
 android {
     namespace ="com.peterchege.aiimagegenerator"
@@ -55,6 +58,8 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+
 }
 
 dependencies {
