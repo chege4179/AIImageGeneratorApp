@@ -109,4 +109,6 @@ dependencies {
     //pager
     implementation ("com.google.accompanist:accompanist-pager:0.24.3-alpha")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.24.3-alpha")
+
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 }

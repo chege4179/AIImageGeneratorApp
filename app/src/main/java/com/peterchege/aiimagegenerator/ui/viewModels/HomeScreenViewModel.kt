@@ -15,8 +15,7 @@
  */
 package com.peterchege.aiimagegenerator.ui.viewModels
 
-import android.util.Log
-import androidx.compose.material.ScaffoldState
+
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -25,9 +24,12 @@ import com.peterchege.aiimagegenerator.domain.models.ImageItem
 import com.peterchege.aiimagegenerator.domain.models.RequestBody
 import com.peterchege.aiimagegenerator.domain.use_case.GenerateImagesUseCase
 import com.peterchege.aiimagegenerator.util.Resource
+import com.peterchege.aiimagegenerator.util.UiEvent
 import com.peterchege.aiimagegenerator.util.imageCounts
 import com.peterchege.aiimagegenerator.util.imageSizes
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -60,6 +62,9 @@ class HomeScreenViewModel @Inject constructor(
     private var _generatedImages = mutableStateOf<List<ImageItem>>(emptyList())
     var generatedImages: State<List<ImageItem>> = _generatedImages
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
 
     fun onChangeSelectedImageSizeIndex(index: Int) {
         _selectedImageSizeIndex.value = index
@@ -76,27 +81,26 @@ class HomeScreenViewModel @Inject constructor(
         _prompt.value = text
     }
 
-    fun generateImages(scaffoldState: ScaffoldState) {
+    fun generateImages() {
         _isLoading.value = true
         val requestBody = RequestBody(prompt = _prompt.value, n = _imageCount.value, size = _size.value)
         generateImagesUseCase(requestBody = requestBody).onEach { result ->
             when (result) {
                 is Resource.Success -> {
-                    Log.e("success","success")
+
                     _isLoading.value = false
                     _generatedImages.value = result.data?.data ?: emptyList()
 
                 }
                 is Resource.Error -> {
-                    Log.e("error","error")
+
                     _isLoading.value = false
-                    scaffoldState.snackbarHostState.showSnackbar(
-                        message = result.message ?: "An unexpected error occurred"
-                    )
+                    _eventFlow.emit(UiEvent.ShowSnackbar(uiText = result.message ?: "An unexpected error occurred"))
+
 
                 }
                 is Resource.Loading -> {
-                    Log.e("loading","loading")
+
                     _isLoading.value = true
 
                 }

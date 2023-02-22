@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +45,10 @@ import com.peterchege.aiimagegenerator.domain.downloader.AndroidDownloader
 import com.peterchege.aiimagegenerator.ui.components.MyCustomDropDownMenu
 import com.peterchege.aiimagegenerator.ui.components.PagerIndicator
 import com.peterchege.aiimagegenerator.ui.viewModels.HomeScreenViewModel
+import com.peterchege.aiimagegenerator.util.UiEvent
 import com.peterchege.aiimagegenerator.util.imageCounts
 import com.peterchege.aiimagegenerator.util.imageSizes
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.M)
@@ -58,6 +61,22 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
+
+    LaunchedEffect(key1 = true) {
+        viewModel.eventFlow.collectLatest { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> {
+                    scaffoldState.snackbarHostState.showSnackbar(
+                        message = event.uiText
+                    )
+                }
+                is UiEvent.Navigate -> {
+                    navController.navigate(route = event.route)
+                }
+            }
+        }
+    }
+
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier
@@ -154,7 +173,7 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Button(onClick = {
-                            viewModel.generateImages(scaffoldState = scaffoldState)
+                            viewModel.generateImages()
                         }) {
                             Text(text = "Generate")
                         }
