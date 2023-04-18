@@ -10,6 +10,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Create Local Properties File
+        run: cat /home/runner/work/AIImageGenerator/AIImageGenerator/local.properties | base64
+      - name: Putting data
+        env:
+          DATA: ${{ secrets.PROPERTIES_CONTENT }}
+        run: echo $DATA > /home/runner/work/AIImageGenerator/AIImageGenerator/local.properties
+
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
