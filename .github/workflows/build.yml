@@ -33,20 +33,11 @@ jobs:
       - name: Build App with Gradle
         run: ./gradlew build
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: Run Unit Tests with Gradle
         run: ./gradlew test
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
       - name: Upload a Build Artifact (APK)
         uses: actions/upload-artifact@v2.2.4
         with:
           name: app
           path: app/build/outputs/apk/debug/app-debug.apk
-
