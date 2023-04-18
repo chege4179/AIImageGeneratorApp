@@ -1,0 +1,45 @@
+name: AI Image Generator App CI/CD WorkFlow
+
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Cache gradle
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-    
+
+      - name: Build App with Gradle
+        run: ./gradlew build
+
+  test:
+    - runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - name: Run Unit Tests with Gradle
+          run: ./gradlew test
+
+  deploy:
+    - runs-on: ubuntu-latest
+      needs: test
+      steps:
+        - name: Upload a Build Artifact (APK)
+          uses: actions/upload-artifact@v2.2.4
+          with:
+            name: app
+            path: app/build/outputs/apk/debug/app-debug.apk
+
