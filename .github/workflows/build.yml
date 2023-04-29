@@ -31,7 +31,7 @@ jobs:
             ${{ runner.os }}-gradle-    
 
       - name: Build App with Gradle
-        run: ./gradlew build
+        run: ./gradlew assembleDebug
 
       - name: Run Unit Tests with Gradle
         run: ./gradlew test
