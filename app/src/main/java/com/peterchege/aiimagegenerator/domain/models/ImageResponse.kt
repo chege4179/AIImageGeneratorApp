@@ -15,11 +15,16 @@
  */
 package com.peterchege.aiimagegenerator.domain.models
 
+import com.squareup.moshi.Json
+
 data class ImageResponse (
+    @field:Json(name = "created")
     val created:String,
+    @field:Json(name = "data")
     val data:List<ImageItem>
         )
 
 data class ImageItem(
+    @field:Json(name = "url")
     val url:String
 )

@@ -15,6 +15,10 @@
  */
 package com.peterchege.aiimagegenerator.data.di
 
+import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerCollector
+import com.chuckerteam.chucker.api.ChuckerInterceptor
+import com.chuckerteam.chucker.api.RetentionManager
 import com.peterchege.aiimagegenerator.BuildConfig
 import com.peterchege.aiimagegenerator.data.api.OpenAIApi
 import com.peterchege.aiimagegenerator.data.repository.ImageRepositoryImpl
@@ -23,24 +27,66 @@ import com.peterchege.aiimagegenerator.util.Constants
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-    val client =  OkHttpClient.Builder()
-        .addInterceptor(OAuthInterceptor("Bearer", BuildConfig.OPEN_AI_API_KEY))
-        .build()
+
+
     @Provides
     @Singleton
-    fun provideOpenAIApi(): OpenAIApi {
+    fun provideChuckerCollector(
+        @ApplicationContext context: Context
+    ):ChuckerCollector{
+        return ChuckerCollector(
+            context = context,
+            showNotification = true,
+            retentionPeriod = RetentionManager.Period.ONE_HOUR
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideChuckerInterceptor(
+        chuckerCollector: ChuckerCollector,
+        @ApplicationContext context: Context
+    ):ChuckerInterceptor{
+        return ChuckerInterceptor.Builder(context)
+            .collector(collector = chuckerCollector)
+            .maxContentLength(250_000L)
+            .alwaysReadResponseBody(enable = true)
+            .build()
+
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkhttpClient(
+        chuckerInterceptor: ChuckerInterceptor,
+    ):OkHttpClient{
+        return OkHttpClient.Builder()
+            .addInterceptor(OAuthInterceptor("Bearer", BuildConfig.OPEN_AI_API_KEY))
+            .addInterceptor(chuckerInterceptor)
+            .build()
+    }
+
+
+
+
+    @Provides
+    @Singleton
+    fun provideOpenAIApi(
+        client:OkHttpClient
+    ): OpenAIApi {
         return Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create())
             .baseUrl(Constants.BASE_URL)
             .client(client)
             .build()
