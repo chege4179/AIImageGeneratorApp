@@ -15,7 +15,9 @@
  */
 package com.peterchege.aiimagegenerator.data.repository
 
+import com.peterchege.aiimagegenerator.data.api.NetworkResult
 import com.peterchege.aiimagegenerator.data.api.OpenAIApi
+import com.peterchege.aiimagegenerator.data.api.handleApi
 import com.peterchege.aiimagegenerator.domain.models.ImageResponse
 import com.peterchege.aiimagegenerator.domain.models.RequestBody
 import com.peterchege.aiimagegenerator.domain.repository.ImageRepository
@@ -26,8 +28,8 @@ class ImageRepositoryImpl @Inject constructor(
 ):ImageRepository {
 
 
-    override suspend fun generateImages(requestBody: RequestBody): ImageResponse {
-        return api.generateImages(requestBody = requestBody)
+    override suspend fun generateImages(requestBody: RequestBody): NetworkResult<ImageResponse> {
+        return handleApi { api.generateImages(requestBody = requestBody) }
     }
 
 }

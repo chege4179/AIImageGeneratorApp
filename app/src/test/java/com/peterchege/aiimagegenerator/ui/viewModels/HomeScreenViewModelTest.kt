@@ -15,60 +15,61 @@
  */
 package com.peterchege.aiimagegenerator.ui.viewModels
 
+import com.peterchege.aiimagegenerator.MainDispatcherRule
+import com.peterchege.aiimagegenerator.data.api.NetworkResult
 import com.peterchege.aiimagegenerator.domain.models.ImageItem
-import com.peterchege.aiimagegenerator.domain.use_case.GenerateImagesUseCase
-import com.peterchege.aiimagegenerator.repository.FakeImageRepository
-import kotlinx.coroutines.Dispatchers
+import com.peterchege.aiimagegenerator.domain.models.ImageResponse
+import com.peterchege.aiimagegenerator.domain.repository.ImageRepository
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
 import org.junit.Assert.*
 
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
+
+val fakeImages = ('a'..'z').map {  c ->
+    ImageItem(
+        url = c.toString()
+    )
+}
 
 class HomeScreenViewModelTest {
     lateinit var  homeScreenViewModel: HomeScreenViewModel
-    lateinit var generateImagesUseCase: GenerateImagesUseCase
-    lateinit var imageRepository: FakeImageRepository
+    val imageRepository = mockk<ImageRepository>(relaxed = true)
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     @Before
     fun setUp() {
-        imageRepository = FakeImageRepository()
-        generateImagesUseCase = GenerateImagesUseCase(imageRepository = imageRepository)
-        homeScreenViewModel = HomeScreenViewModel(generateImagesUseCase)
+        homeScreenViewModel = HomeScreenViewModel(repository = imageRepository)
     }
 
     @Test
-    fun `Verify No Images are available on startup`(){
-        assertEquals(emptyList<ImageItem>(),homeScreenViewModel.generatedImages.value)
+    fun `When app is launched the state is idle `(){
+        assert(homeScreenViewModel.uiState.value is HomeScreenUiState.Idle)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+
     @Test
-    fun `Verify Images are loaded into state `() = runTest {
+    fun `When the an error occurs, then an error state is loaded`() = runTest {
+        coEvery { imageRepository.generateImages(any()) } returns
+                NetworkResult.Error(code = 4000 ,message = "An unexpected error occurred")
         homeScreenViewModel.generateImages()
-        assert(homeScreenViewModel.generatedImages.value.isNotEmpty())
+        assert(homeScreenViewModel.uiState.value is HomeScreenUiState.Error)
 
     }
+    @Test
+    fun `When the request is successful the images are loaded into state`() = runTest {
+        coEvery { imageRepository.generateImages(any()) } returns
+                NetworkResult.Success(data = ImageResponse(created = "", data = fakeImages))
+
+        homeScreenViewModel.generateImages()
+        assert(homeScreenViewModel.uiState.value is HomeScreenUiState.Success)
+    }
+
 }
 
-class MainDispatcherRule(
-    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
-) : TestWatcher() {
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun starting(description: Description) {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun finished(description: Description) {
-        Dispatchers.resetMain()
-    }
-}

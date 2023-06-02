@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.peterchege.aiimagegenerator.util
+package com.peterchege.aiimagegenerator.data.api
 
-import com.peterchege.aiimagegenerator.data.api.NetworkResult
-import com.peterchege.aiimagegenerator.domain.models.ImageResponse
-
-sealed class Resource<T>(
-    val data: T? = null,
-    val message: String? = null
-) {
-    class Success<T>(data: T) : Resource<T>(data)
-    class Error<T>(message: String, data: T? = null) : Resource<T>(data, message)
-    class Loading<T> : Resource<T>()
+sealed class NetworkResult<T : Any> {
+    class Success<T: Any>(val data: T) : NetworkResult<T>()
+    class Error<T: Any>(val code: Int, val message: String?) : NetworkResult<T>()
+    class Exception<T: Any>(val e: Throwable) : NetworkResult<T>()
 }

@@ -20,92 +20,92 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.peterchege.aiimagegenerator.data.api.NetworkResult
 import com.peterchege.aiimagegenerator.domain.models.ImageItem
 import com.peterchege.aiimagegenerator.domain.models.RequestBody
-import com.peterchege.aiimagegenerator.domain.use_case.GenerateImagesUseCase
+import com.peterchege.aiimagegenerator.domain.repository.ImageRepository
 import com.peterchege.aiimagegenerator.util.Resource
 import com.peterchege.aiimagegenerator.util.UiEvent
 import com.peterchege.aiimagegenerator.util.imageCounts
 import com.peterchege.aiimagegenerator.util.imageSizes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class FormState(
+    val prompt:String = "",
+    val size:String = "1024x1024",
+    val imageCount:Int = 1
+)
+
+sealed interface HomeScreenUiState {
+    object Idle : HomeScreenUiState
+    object Loading : HomeScreenUiState
+    data class Error(val message: String) : HomeScreenUiState
+    data class Success(val images: List<ImageItem>, ) : HomeScreenUiState
+}
 
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
-
-    private val generateImagesUseCase: GenerateImagesUseCase,
-
+    private val repository: ImageRepository,
     ) : ViewModel() {
-    private val _prompt = mutableStateOf("")
-    val prompt: State<String> = _prompt
 
-    private val _size = mutableStateOf("1024x1024")
-    val size: State<String> = _size
+    private val _formState = MutableStateFlow(FormState())
+    val formState = _formState.asStateFlow()
 
-    private val _imageCount = mutableStateOf(1)
-    val imageCount: State<Int> = _imageCount
 
-    private var _isLoading = mutableStateOf(false)
-    var isLoading: State<Boolean> = _isLoading
+    private val _uiState = MutableStateFlow<HomeScreenUiState>(HomeScreenUiState.Idle)
+    val uiState = _uiState.asStateFlow()
 
-    private var _selectedImageSizeIndex = mutableStateOf(0)
-    var selectedImageSizeIndex: State<Int> = _selectedImageSizeIndex
-
-    private var _selectedImageCountIndex = mutableStateOf(0)
-    var selectedImageCountIndex: State<Int> = _selectedImageCountIndex
-
-    private var _generatedImages = mutableStateOf<List<ImageItem>>(emptyList())
-    var generatedImages: State<List<ImageItem>> = _generatedImages
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
 
     fun onChangeSelectedImageSizeIndex(index: Int) {
-        _selectedImageSizeIndex.value = index
-        _size.value = imageSizes[index]
-    }
+        _formState.value = _formState.value.copy(size = imageSizes[index])
 
+    }
     fun onChangeSelectedImageCountIndex(index: Int) {
-        _selectedImageCountIndex.value = index
-        _imageCount.value = imageCounts[index]
+        _formState.value = _formState.value.copy(imageCount = imageCounts[index])
     }
-
 
     fun onChangePrompt(text: String) {
-        _prompt.value = text
+        _formState.value = _formState.value.copy(prompt = text)
     }
 
     fun generateImages() {
-        _isLoading.value = true
-        val requestBody = RequestBody(prompt = _prompt.value, n = _imageCount.value, size = _size.value)
-        generateImagesUseCase(requestBody = requestBody).onEach { result ->
-            when (result) {
-                is Resource.Success -> {
+        _uiState.value = HomeScreenUiState.Loading
 
-                    _isLoading.value = false
-                    _generatedImages.value = result.data?.data ?: emptyList()
-
+        val requestBody = RequestBody(
+            prompt = _formState.value.prompt,
+            n = _formState.value.imageCount,
+            size = _formState.value.size
+        )
+        viewModelScope.launch {
+            when (val response = repository.generateImages(requestBody = requestBody)) {
+                is NetworkResult.Success -> {
+                    _uiState.value = HomeScreenUiState.Success(images = response.data.data)
                 }
-                is Resource.Error -> {
-
-                    _isLoading.value = false
-                    _eventFlow.emit(UiEvent.ShowSnackbar(uiText = result.message ?: "An unexpected error occurred"))
-
-
+                is NetworkResult.Error -> {
+                    _uiState.value = HomeScreenUiState.Error(
+                        message = response.message ?: "An unexpected error occurred")
+                    _eventFlow.emit(UiEvent.ShowSnackbar(uiText = "${response.code} ${response.message}"))
                 }
-                is Resource.Loading -> {
-
-                    _isLoading.value = true
-
+                is NetworkResult.Exception -> {
+                    _uiState.value = HomeScreenUiState.Error(
+                        message = response.e.message ?: "An unexpected error occurred")
+                    _eventFlow.emit(UiEvent.ShowSnackbar(uiText = "${response.e.message}"))
                 }
             }
-        }.launchIn(viewModelScope)
+        }
+
     }
 
 }

@@ -15,17 +15,24 @@
  */
 package com.peterchege.aiimagegenerator.data.api
 
-
-import com.peterchege.aiimagegenerator.BuildConfig
-import com.peterchege.aiimagegenerator.domain.models.ImageResponse
-import com.peterchege.aiimagegenerator.domain.models.RequestBody
-import com.peterchege.aiimagegenerator.util.Constants
+import retrofit2.HttpException
 import retrofit2.Response
-import retrofit2.http.*
 
-interface OpenAIApi {
 
-    @POST("generations")
-    suspend fun generateImages(@Body requestBody: RequestBody): Response<ImageResponse>
-
+suspend fun <T : Any> handleApi(
+    execute: suspend () -> Response<T>
+): NetworkResult<T> {
+    return try {
+        val response = execute()
+        val body = response.body()
+        if (response.isSuccessful && body != null) {
+            NetworkResult.Success(body)
+        } else {
+            NetworkResult.Error(code = response.code(), message = response.message())
+        }
+    } catch (e: HttpException) {
+        NetworkResult.Error(code = e.code(), message = e.message())
+    } catch (e: Throwable) {
+        NetworkResult.Exception(e)
+    }
 }

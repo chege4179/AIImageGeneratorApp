@@ -64,16 +64,16 @@ dependencies {
     
 
     implementation ("androidx.core:core-ktx:1.10.1")
-    implementation ("androidx.compose.ui:ui:1.5.0-alpha04")
-    implementation ("androidx.compose.material:material:1.5.0-alpha04")
-    implementation ("androidx.compose.ui:ui-tooling-preview:1.5.0-alpha04")
+    implementation ("androidx.compose.ui:ui:1.5.0-beta01")
+    implementation ("androidx.compose.material:material:1.5.0-beta01")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.5.0-beta01")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-    implementation ("androidx.activity:activity-compose:1.7.1")
+    implementation ("androidx.activity:activity-compose:1.7.2")
     testImplementation ("junit:junit:4.13.2")
     androidTestImplementation ("androidx.test.ext:junit:1.1.5")
     androidTestImplementation ("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation ("androidx.compose.ui:ui-test-junit4:1.5.0-alpha04")
-    debugImplementation ("androidx.compose.ui:ui-tooling:1.5.0-alpha04")
+    androidTestImplementation ("androidx.compose.ui:ui-test-junit4:1.5.0-beta01")
+    debugImplementation ("androidx.compose.ui:ui-tooling:1.5.0-beta01")
 
 
     implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
@@ -88,13 +88,15 @@ dependencies {
     // view model
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
+    implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+
 
     //coroutines
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 
     // dagger hilt
-    implementation ("com.google.dagger:hilt-android:2.45")
+    implementation ("com.google.dagger:hilt-android:2.46.1")
     kapt ("com.google.dagger:hilt-android-compiler:2.45")
     kapt ("androidx.hilt:hilt-compiler:1.0.0")
     implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
@@ -106,9 +108,9 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
 
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
-
-
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
+    testImplementation("io.mockk:mockk:1.13.5")
+    androidTestImplementation( "io.mockk:mockk-android:1.13.4")
     debugImplementation ("com.github.chuckerteam.chucker:library:3.5.2")
     releaseImplementation ("com.github.chuckerteam.chucker:library-no-op:3.5.2")
 }

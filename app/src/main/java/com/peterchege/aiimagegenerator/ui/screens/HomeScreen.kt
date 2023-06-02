@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -44,26 +46,55 @@ import com.google.accompanist.pager.rememberPagerState
 import com.peterchege.aiimagegenerator.domain.downloader.AndroidDownloader
 import com.peterchege.aiimagegenerator.ui.components.MyCustomDropDownMenu
 import com.peterchege.aiimagegenerator.ui.components.PagerIndicator
+import com.peterchege.aiimagegenerator.ui.viewModels.FormState
+import com.peterchege.aiimagegenerator.ui.viewModels.HomeScreenUiState
 import com.peterchege.aiimagegenerator.ui.viewModels.HomeScreenViewModel
 import com.peterchege.aiimagegenerator.util.UiEvent
 import com.peterchege.aiimagegenerator.util.imageCounts
 import com.peterchege.aiimagegenerator.util.imageSizes
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
+@RequiresApi(Build.VERSION_CODES.M)
+@Composable
+fun HomeScreen(
+    navController:NavController,
+    viewModel:HomeScreenViewModel = hiltViewModel()
+){
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val formState by viewModel.formState.collectAsStateWithLifecycle()
+    HomeScreenContent(
+        uiState = uiState,
+        formState = formState,
+        eventFlow = viewModel.eventFlow,
+        onChangePrompt = { viewModel.onChangePrompt(it) },
+        onChangeSize = { viewModel.onChangeSelectedImageSizeIndex(it) },
+        onChangeImageCount = { viewModel.onChangeSelectedImageCountIndex(it) },
+        onSubmit = { viewModel.generateImages() }
+    )
+
+}
+
 
 @RequiresApi(Build.VERSION_CODES.M)
 @OptIn(ExperimentalPagerApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun HomeScreen(
-    navController:NavController,
-    viewModel:HomeScreenViewModel = hiltViewModel()
+fun HomeScreenContent(
+    uiState: HomeScreenUiState,
+    formState:FormState,
+    eventFlow:SharedFlow<UiEvent>,
+    onChangePrompt:(String) -> Unit,
+    onChangeSize:(Int) -> Unit,
+    onChangeImageCount: (Int) -> Unit,
+    onSubmit:() -> Unit,
 ) {
     val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
 
     LaunchedEffect(key1 = true) {
-        viewModel.eventFlow.collectLatest { event ->
+        eventFlow.collectLatest { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> {
                     scaffoldState.snackbarHostState.showSnackbar(
@@ -71,7 +102,7 @@ fun HomeScreen(
                     )
                 }
                 is UiEvent.Navigate -> {
-                    navController.navigate(route = event.route)
+
                 }
             }
         }
@@ -79,9 +110,7 @@ fun HomeScreen(
 
     Scaffold(
         scaffoldState = scaffoldState,
-        modifier = Modifier
-            .fillMaxSize(),
-
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {
@@ -99,10 +128,8 @@ fun HomeScreen(
             )
         },
     ) {
+
         Box(modifier = Modifier.fillMaxSize()){
-            if (viewModel.isLoading.value) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -113,11 +140,11 @@ fun HomeScreen(
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
                     label = {
-                        Text("Enter Image Description")
+                        Text(text = "Enter Image Description")
                     },
-                    value = viewModel.prompt.value,
+                    value = formState.prompt,
                     onValueChange = {
-                        viewModel.onChangePrompt(it)
+                        onChangePrompt(it)
 
                     })
                 Spacer(modifier = Modifier.height(10.dp))
@@ -140,10 +167,9 @@ fun HomeScreen(
                         )
                         MyCustomDropDownMenu(
                             listItems = imageSizes,
-                            selectedIndex = viewModel.selectedImageSizeIndex.value,
+                            selectedIndex = imageSizes.indexOf(formState.size) ,
                             onChangeSelectedIndex = {
-                                Log.d("Index1", it.toString())
-                                viewModel.onChangeSelectedImageSizeIndex(it)
+                                onChangeSize(it)
                             },
                             width = 0.4f,
                         )
@@ -160,10 +186,9 @@ fun HomeScreen(
                         )
                         MyCustomDropDownMenu(
                             listItems = imageCounts.map { it.toString() },
-                            selectedIndex = viewModel.selectedImageCountIndex.value,
+                            selectedIndex = imageCounts.indexOf(formState.imageCount) ,
                             onChangeSelectedIndex = {
-                                Log.d("Index2", it.toString())
-                                viewModel.onChangeSelectedImageCountIndex(it)
+                                onChangeImageCount(it)
                             },
                         width = 0.4f,
                         )
@@ -173,7 +198,8 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Button(onClick = {
-                            viewModel.generateImages()
+                            onSubmit()
+
                         }) {
                             Text(text = "Generate")
                         }
@@ -181,95 +207,117 @@ fun HomeScreen(
 
                 }
 
-                if (viewModel.generatedImages.value.isNotEmpty()){
-
-                    val pagerState1 = rememberPagerState(initialPage = 0)
-                    val coroutineScope = rememberCoroutineScope()
-                    HorizontalPager(
-                        count = viewModel.generatedImages.value.size,
-                        state = pagerState1
-                    ) { image ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ){
-                            SubcomposeAsyncImage(
-                                model = viewModel.generatedImages.value[image].url,
-                                loading = {
-                                    Box(modifier = Modifier.fillMaxSize()) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.align(
-                                                Alignment.Center
-                                            )
-                                        )
-                                    }
-                                },
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp),
-                                contentDescription = "Generated Images"
+                when(uiState){
+                    is HomeScreenUiState.Idle -> {
+                        Box(modifier = Modifier.fillMaxSize()){
+                            Text(
+                                text = "Start generating images",
+                                modifier = Modifier.align(Alignment.Center)
                             )
+                        }
+                    }
+                    is HomeScreenUiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize()){
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                        }
+                    }
+                    is HomeScreenUiState.Error -> {
+                        Box(modifier = Modifier.fillMaxSize()){
+                            Text(
+                                text = "An unexpected error",
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
+                    is HomeScreenUiState.Success -> {
+                        val images = uiState.images
+                        val pagerState1 = rememberPagerState(initialPage = 0)
+                        val coroutineScope = rememberCoroutineScope()
+                        HorizontalPager(
+                            count = images.size,
+                            state = pagerState1
+                        ) { image ->
                             Box(
-                                modifier = Modifier
-                                    .padding(10.dp)
-                                    .width(45.dp)
-                                    .align(Alignment.TopEnd)
-                                    .height(25.dp)
-                                    .clip(RoundedCornerShape(15.dp))
-                                    .background(Color.White)
-
+                                modifier = Modifier.fillMaxWidth()
                             ){
-                                Text(
+                                SubcomposeAsyncImage(
+                                    model = images[image].url,
+                                    loading = {
+                                        Box(modifier = Modifier.fillMaxSize()) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.align(
+                                                    Alignment.Center
+                                                )
+                                            )
+                                        }
+                                    },
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .padding(horizontal = 3.dp),
-                                    textAlign = TextAlign.Start,
-                                    fontSize = 17.sp,
-                                    text = "${image + 1}/${viewModel.generatedImages.value.size}"
+                                        .fillMaxWidth()
+                                        .height(300.dp),
+                                    contentDescription = "Generated Images"
                                 )
-                            }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(20.dp)
-                    ) {
-                        PagerIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            pagerState = pagerState1
-                        ) {
-                            coroutineScope.launch {
-                                pagerState1.scrollToPage(it)
-                            }
-                        }
-                    }
+                                Box(
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .width(45.dp)
+                                        .align(Alignment.TopEnd)
+                                        .height(25.dp)
+                                        .clip(RoundedCornerShape(15.dp))
+                                        .background(Color.White)
 
-                    Text(
-                        fontSize = 13.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "NB: The images might load slowly because of the API so please be patient enough for them to load ")
-                    Row(
-                        modifier = Modifier.fillMaxWidth().height(90.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ){
-                        Button(
-                            onClick = {
-                                val downloader = AndroidDownloader(context = context)
-
-                                viewModel.generatedImages.value.map {
-                                    downloader.downloadFile(url = it.url)
+                                ){
+                                    Text(
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                            .padding(horizontal = 3.dp),
+                                        textAlign = TextAlign.Start,
+                                        fontSize = 17.sp,
+                                        text = "${image + 1}/${images.size}"
+                                    )
                                 }
-
                             }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(20.dp)
+                        ) {
+                            PagerIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                pagerState = pagerState1
+                            ) {
+                                coroutineScope.launch {
+                                    pagerState1.scrollToPage(it)
+                                }
+                            }
+                        }
+
+                        Text(
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "NB: The images might load slowly because of the API so please be patient enough for them to load ")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(90.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
                         ){
-                            Text(text = "Download Images")
+                            Button(
+                                onClick = {
+                                    val downloader = AndroidDownloader(context = context)
+                                    images.map {
+                                        downloader.downloadFile(url = it.url)
+                                    }
+
+                                }
+                            ){
+                                Text(text = "Download Images")
+                            }
                         }
                     }
-
-
                 }
             }
         }
