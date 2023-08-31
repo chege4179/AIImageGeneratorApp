@@ -40,7 +40,7 @@ class AndroidDownloader(
 
         return downloadManager.enqueue(request)
     }
-    fun getRandomString(length: Int) : String {
+    private fun getRandomString(length: Int) : String {
         val charset = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz0123456789"
         return (1..length)
             .map { charset.random() }

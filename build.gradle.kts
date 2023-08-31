@@ -1,6 +1,13 @@
 plugins {
     id("com.diffplug.spotless") version "5.3.0"
+    id ("org.jetbrains.kotlin.jvm") version "1.9.0"
+    id("com.google.devtools.ksp") version "1.9.10-1.0.13"
 
+}
+
+subprojects{
+    apply(plugin = "com.google.devtools.ksp")
+    apply(plugin = "dagger.hilt.android.plugin")
 }
 buildscript {
 
@@ -11,15 +18,11 @@ buildscript {
     }
     dependencies {
         classpath ("com.android.tools.build:gradle:7.4.2")
-        classpath ("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
-        classpath ("com.google.dagger:hilt-android-gradle-plugin:2.46.1")
-
-
-
+        classpath ("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
+        classpath ("com.google.dagger:hilt-android-gradle-plugin:2.48")
     }
-
 }
-//apply(from = "${project.rootDir}/jacoco.gradle.kts")
+
 apply(plugin = "com.diffplug.spotless")
 spotless {
     kotlin {
